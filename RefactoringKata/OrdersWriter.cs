@@ -2,106 +2,114 @@
 
 namespace RefactoringKata
 {
-    public class OrdersWriter
-    {
-        private Orders _orders;
+	public class OrdersWriter
+	{
+		private static string COLN = ": ";
+		private static string CAMA = ", ";
+		private static string LEFT_CURLY_BRACKETS = "{";
+		private static string RIGHT_CURLY_BRACKETS = "}";
+		private static string LEFT_SQUARE_BRACKETS  = "[";
+		private static string RIGHT_SQUARE_BRACKETS  = "]";
+		private Orders _orders;
 
-        public OrdersWriter(Orders orders)
-        {
-            _orders = orders;
-        }
+		public OrdersWriter(Orders orders)
+		{
+			_orders = orders;
+		}
 
-        public string GetContents()
-        {
-            var sb = new StringBuilder("{\"orders\": [");
+		public string GetContents()
+		{
+			var sb = new StringBuilder();
+			sb.Append(LEFT_CURLY_BRACKETS);
+			sb.Append(MakeKey("orders"));
+			sb.Append(LEFT_SQUARE_BRACKETS);
+			sb.Append(MakeOrdersXML());
+			sb.Append(RIGHT_SQUARE_BRACKETS);
+			sb.Append(RIGHT_CURLY_BRACKETS);
 
-            for (var i = 0; i < _orders.GetOrdersCount(); i++)
-            {
-                var order = _orders.GetOrder(i);
-                sb.Append("{");
-                sb.Append("\"id\": ");
-                sb.Append(order.GetOrderId());
-                sb.Append(", ");
-                sb.Append("\"products\": [");
+			return sb.ToString();
+		}
 
-                for (var j = 0; j < order.GetProductsCount(); j++)
-                {
-                    var product = order.GetProduct(j);
-                    sb.Append("{");
-                    sb.Append("\"code\": \"");
-                    sb.Append(product.Code);
-                    sb.Append("\", ");
-                    sb.Append("\"color\": \"");
-                    sb.Append(getColorFor(product));
-                    sb.Append("\", ");
+		private string GetQuterString(string str)
+		{
+			return "\"" + str + "\"";
+		}
 
-                    if (product.Size != Product.SIZE_NOT_APPLICABLE)
-                    {
-                        sb.Append("\"size\": \"");
-                        sb.Append(getSizeFor(product));
-                        sb.Append("\", ");
-                    }
+		private string MakeXMLItem(string key, string value)
+		{
+			return MakeXMLItemWithoutCama(key, value) + CAMA;
+		}
 
-                    sb.Append("\"price\": ");
-                    sb.Append(product.Price);
-                    sb.Append(", ");
-                    sb.Append("\"currency\": \"");
-                    sb.Append(product.Currency);
-                    sb.Append("\"}, ");
-                }
+		private string MakeXMLItemWithoutCama(string key, string value)
+		{
+			var sb = new StringBuilder(MakeKey(key));
+			return sb.Append(GetQuterString(value)).ToString();
+		}
 
-                if (order.GetProductsCount() > 0)
-                {
-                    sb.Remove(sb.Length - 2, 2);
-                }
+		private string MakeXMLItem(string key, decimal value)
+		{
+			var sb = new StringBuilder(MakeKey(key));
+			sb.Append(value);
+			sb.Append(CAMA);
+			return sb.ToString();
+		}
 
-                sb.Append("]");
-                sb.Append("}, ");
-            }
+		private string MakeKey(string key)
+		{
+			var sb = new StringBuilder(GetQuterString(key));
+			return sb.Append(COLN).ToString();
+		}
 
-            if (_orders.GetOrdersCount() > 0)
-            {
-                sb.Remove(sb.Length - 2, 2);
-            }
+		private string MakeOrdersXML()
+		{
+			var sb = new StringBuilder();
+			for (var i = 0; i < _orders.GetOrdersCount(); i++)
+			{
+				sb.Append(MakeOrderXML(_orders.GetOrder(i)));
+				if (i < _orders.GetOrdersCount() - 1)
+				{
+					sb.Append(CAMA);
+				}
+			}
+			return sb.ToString();
+		}
 
-            return sb.Append("]}").ToString();
-        }
+		private string MakeOrderXML(Order order)
+		{
+			var sb = new StringBuilder();
+			sb.Append(LEFT_CURLY_BRACKETS);
+			sb.Append(MakeXMLItem("id", order.GetOrderId()));
+			sb.Append(MakeKey("products"));
+			sb.Append(LEFT_SQUARE_BRACKETS);
 
+			for (var j = 0; j < order.GetProductsCount(); j++)
+			{
+				sb.Append(MakeProductXML(order.GetProduct(j)));
+				if (j < order.GetProductsCount() - 1)
+				{
+					sb.Append(CAMA);
+				}
+			}
+			sb.Append(RIGHT_SQUARE_BRACKETS);
+			sb.Append(RIGHT_CURLY_BRACKETS);
 
-        private string getSizeFor(Product product)
-        {
-            switch (product.Size)
-            {
-                case 1:
-                    return "XS";
-                case 2:
-                    return "S";
-                case 3:
-                    return "M";
-                case 4:
-                    return "L";
-                case 5:
-                    return "XL";
-                case 6:
-                    return "XXL";
-                default:
-                    return "Invalid Size";
-            }
-        }
+			return sb.ToString();
+		}
 
-        private string getColorFor(Product product)
-        {
-            switch (product.Color)
-            {
-                case 1:
-                    return "blue";
-                case 2:
-                    return "red";
-                case 3:
-                    return "yellow";
-                default:
-                    return "no color";
-            }
-        }
-    }
+		private string MakeProductXML(Product product)
+		{
+			var sb = new StringBuilder();
+			sb.Append(LEFT_CURLY_BRACKETS);
+			sb.Append(MakeXMLItem("code", product.Code));
+			sb.Append(MakeXMLItem("color", product.GetColorStr()));
+			if (product.Size != Product.SIZE_NOT_APPLICABLE)
+			{
+				sb.Append(MakeXMLItem("size", product.GetSizeString()));
+			}
+			sb.Append(MakeXMLItem("price", (decimal)product.Price));
+			sb.Append(MakeXMLItemWithoutCama("currency", product.Currency));
+			sb.Append(RIGHT_CURLY_BRACKETS);
+			return sb.ToString();
+		}
+	}
 }
