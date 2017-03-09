@@ -1,14 +1,19 @@
-﻿namespace RefactoringKata
+﻿using System.Text;
+
+namespace RefactoringKata
 {
 	public class Product
 	{
-		public static int SIZE_NOT_APPLICABLE = -1;
+		private static int SIZE_NOT_APPLICABLE = -1;
 
-		public string Code { get; set; }
-		public int Color { get; set; }
-		public int Size { get; set; }
-		public double Price { get; set; }
-		public string Currency { get; set; }
+		private string Code { get; set; }
+		private int Color { get; set; }
+		private int Size { get; set; }
+		private double Price { get; set; }
+		private string Currency { get; set; }
+
+		private readonly string[] _colorStr = { "no color", "blue", "red", "yellow", "M", "L", "XL", "XXL" };
+		private readonly string[] _sizeStr = { "Invalid Size", "XS", "S", "M", "L", "XL", "XXL" };
 
 		public Product(string code, int color, int size, double price, string currency)
 		{
@@ -19,49 +24,18 @@
 			Currency = currency;
 		}
 
-		public string GetColorStr()
+		public string MakeProductItem()
 		{
-			switch (Color)
+			var sb = new StringBuilder();
+			sb.Append(JsonMaker.MakeItem("code", Code));
+			sb.Append(JsonMaker.MakeItem("color", _colorStr[Color]));
+			if (Size != Product.SIZE_NOT_APPLICABLE)
 			{
-				case 1:
-					return "blue";
-
-				case 2:
-					return "red";
-
-				case 3:
-					return "yellow";
-
-				default:
-					return "no color";
+				sb.Append(JsonMaker.MakeItem("size", _sizeStr[Size]));
 			}
-		}
-
-		public string GetSizeString()
-		{
-			switch (Size)
-			{
-				case 1:
-					return "XS";
-
-				case 2:
-					return "S";
-
-				case 3:
-					return "M";
-
-				case 4:
-					return "L";
-
-				case 5:
-					return "XL";
-
-				case 6:
-					return "XXL";
-
-				default:
-					return "Invalid Size";
-			}
+			sb.Append(JsonMaker.MakeItem("price", (decimal)Price));
+			sb.Append(JsonMaker.MakeItemWithoutCama("currency", Currency));
+			return JsonMaker.AddCurlyBrackets(sb.ToString());
 		}
 	}
 }
